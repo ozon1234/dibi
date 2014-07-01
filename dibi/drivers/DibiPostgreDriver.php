@@ -35,8 +35,6 @@ class DibiPostgreDriver extends DibiObject implements IDibiDriver, IDibiResultDr
 	/** @var int|FALSE  Affected rows */
 	private $affectedRows = FALSE;
 
-	public $typeGetter;
-
 
 	/**
 	 * @throws DibiNotSupportedException
@@ -397,7 +395,7 @@ class DibiPostgreDriver extends DibiObject implements IDibiDriver, IDibiResultDr
 
 	public function getNativeTypesHash()
 	{
-		return $this->typeGetter instanceof Closure ? call_user_func($this->typeGetter) : $this->getDBNativeTypes();
+		return is_callable([ $this, 'typeGetter' ]) ? $this->typeGetter($this) : $this->getDBNativeTypes();
 	}
 
 	public function getDBNativeTypes()
