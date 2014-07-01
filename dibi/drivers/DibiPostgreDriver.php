@@ -393,6 +393,13 @@ class DibiPostgreDriver extends DibiObject implements IDibiDriver, IDibiResultDr
 		$this->resultSet = NULL;
 	}
 
+	public function getNativeTypesHash()
+	{
+		static $types = [];
+		$res =  pg_query($this->connection, 'select oid, typname from pg_type');
+		while ($row = pg_fetch_assoc($res)) $types[ $row['oid'] ] = $row['typname'];
+		return $types;
+	}
 
 	/**
 	 * Returns metadata for all columns in a result set.
@@ -402,11 +409,12 @@ class DibiPostgreDriver extends DibiObject implements IDibiDriver, IDibiResultDr
 	{
 		$count = pg_num_fields($this->resultSet);
 		$columns = array();
+		$types = $this->getNativeTypesHash();
 		for ($i = 0; $i < $count; $i++) {
 			$row = array(
 				'name'      => pg_field_name($this->resultSet, $i),
 				'table'     => pg_field_table($this->resultSet, $i),
-				'nativetype'=> pg_field_type($this->resultSet, $i),
+				'nativetype'=> @$types[pg_field_type_oid($this->resultSet, $i)] ?: false,
 			);
 			$row['fullname'] = $row['table'] ? $row['table'] . '.' . $row['name'] : $row['name'];
 			$columns[] = $row;
